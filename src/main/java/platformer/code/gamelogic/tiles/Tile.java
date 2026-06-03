@@ -3,7 +3,6 @@ package platformer.code.gamelogic.tiles;
 import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 
-import platformer.code.gameengine.GameObject;
 import platformer.code.gameengine.hitbox.RectHitbox;
 import platformer.code.gameengine.maths.Vector2D;
 import platformer.code.gamelogic.level.Level;
@@ -16,7 +15,12 @@ public class Tile{
 	protected BufferedImage image;
 	protected boolean solid;
 	protected Level level;
-	
+
+		public void setImage(BufferedImage image2) {
+		image = image2;
+	}
+
+
 	public Tile(float x, float y, int size, BufferedImage image, boolean solid, Level level) {
 		this.position = new Vector2D(x*size, y*size);
 		this.size = size;
@@ -24,16 +28,14 @@ public class Tile{
 		this.solid = solid;
 		this.level = level;
 	}
-	
-	public void update (float tslf) {};
-	
+
 	public void draw (Graphics g) {
 		if(image != null) g.drawImage(image, (int)position.x, (int)position.y, size, size, null);
 		
 		if(hitbox != null) hitbox.draw(g);		
 	}
 	
-	
+	public void update (float tslf) {};
 	
 	//------------------------------------Getters
 	public boolean isSolid() {
