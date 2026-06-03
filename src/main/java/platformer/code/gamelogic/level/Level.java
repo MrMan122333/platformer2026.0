@@ -203,6 +203,7 @@ public class Level {
 		gimg="GasOne";
 		Gas g=new Gas(col,row, tileSize, tileset.getImage(gimg), this, numSquaresToFill);
 		map.addTile(col,row, g);
+		
 	}
 	
 		private void water(int col, int row, Map map, int fullness) {
