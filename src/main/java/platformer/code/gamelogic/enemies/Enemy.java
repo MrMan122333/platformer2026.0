@@ -10,7 +10,7 @@ import platformer.code.gamelogic.level.Level;
 
 public class Enemy extends PhysicsObject{
 
-	private float walkSpeed = 80;
+	private float walkSpeed = 40;
 	private BufferedImage image;
 	
 	public Enemy(float x, float y, Level level) {

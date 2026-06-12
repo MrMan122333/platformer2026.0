@@ -1,5 +1,7 @@
 package platformer.code.gamelogic.level;
 
+import java.awt.Color;
+import java.awt.Font;
 import java.awt.Graphics;
 import java.util.ArrayList;
 import java.util.List;
@@ -35,6 +37,7 @@ public class Level {
 
 	private ArrayList<Enemy> enemiesList = new ArrayList<>();
 	private ArrayList<Flower> flowers = new ArrayList<>();
+	private ArrayList<Water> waters=new ArrayList<>();
 
 	private List<PlayerDieListener> dieListeners = new ArrayList<>();
 	private List<PlayerWinListener> winListeners = new ArrayList<>();
@@ -45,6 +48,8 @@ public class Level {
 	private int tileSize;
 	private Tileset tileset;
 	public static float GRAVITY = 70;
+	private long waterTimer=0;
+	private long waterLimit = 5;
 
 	public Level(LevelData leveldata) {
 		this.leveldata = leveldata;
@@ -177,11 +182,22 @@ public class Level {
 					i--;
 				}
 			}
+			for (int i=0; i<waters.size(); i++){
+				if (flowers.get(i).getHitbox().isIntersecting(player.getHitbox())) {
+					if(waterTimer==0){
+						waterTimer=System.currentTimeMillis();
+					}
+					else{
+						if((System.currentTimeMillis()-waterTimer)/1000>=waterLimit){
 
+						}
+					}
+				}
+				}
 			// Update the enemies
-			for (int i = 0; i < enemies.length; i++) {
-				enemies[i].update(tslf);
-				if (player.getHitbox().isIntersecting(enemies[i].getHitbox())) {
+			for (int i1 = 0; i1 < enemies.length; i1++) {
+				enemies[i1].update(tslf);
+				if (player.getHitbox().isIntersecting(enemies[i1].getHitbox())) {
 					onPlayerDeath();
 				}
 			}
@@ -191,59 +207,97 @@ public class Level {
 
 			// Update the camera
 			camera.update(tslf);
-		}
+			
+		}	
 	}
 	
 	
 	//#############################################################################################################
 	//Your code goes here! 
 	//Please make sure you read the rubric/directions carefully and implement the solution recursively!
+	//This makes a gas cloud when the player touches a purpule flower
 	private void addGas(int col, int row, Map map, int numSquaresToFill, ArrayList<Gas> placedThisRound) {
-		String gimg;
-		gimg="GasOne";
-		Gas g=new Gas(col,row, tileSize, tileset.getImage(gimg), this, numSquaresToFill);
-		map.addTile(col,row, g);
-		
+    Gas g = new Gas(col, row, tileSize, tileset.getImage("GasOne"), this, 1);
+	map.addTile(col, row, g);
+	placedThisRound.add(g);
+	int[][] gasList = {{0, -1}, {1, -1}, {-1, -1}, {1, 0}, {-1, 0}, {0, 1}, {1, 1}, {-1, 1}};
+	int index = 0;
+	while(placedThisRound.size()<numSquaresToFill){
+		col = placedThisRound.get(index).getCol();
+		row = placedThisRound.get(index).getRow();
+		for(int i = 0; i<gasList.length; i++){
+			if(numSquaresToFill>0&&(col+gasList[i][0]>0||(col+gasList[i][0]<map.getTiles().length))&&((row+gasList[i][1]>0)||(row+gasList[i][1]<map.getTiles()[col].length))
+			&& (map.getTiles()[col+gasList[i][0]][row+gasList[i][1]].isSolid()==false&&!(map.getTiles()[col+gasList[i][0]][row+gasList[i][1]] instanceof Gas))) {
+				if (placedThisRound.size() <numSquaresToFill) {
+					Gas g2 = new Gas(col+ gasList[i][0], row + gasList[i][1], tileSize, tileset.getImage("GasOne"), this, 0);
+					map.addTile(col+ gasList[i][0], row + gasList[i][1], g2);
+					placedThisRound.add(g2);
+				}
+			}
+		}
+		index++;
 	}
+}	
+
+	
+	
 	
 		private void water(int col, int row, Map map, int fullness) {
-		
-		
-		String img;
-		if(fullness>=3)
-			img="Full_water";
-		else if(fullness>=1)
-			img="Half_water";
-		else 
-			img="Quarter_water";
-		
-
-		Water w=new Water(col, row, tileSize, tileset.getImage(img), this, fullness);
-		map.addTile(col, row,w);
-		
-		if (row + 1 < map.getTiles()[0].length && !map.getTiles()[col][row + 1].isSolid() && !(map.getTiles()[col][row + 1] instanceof Water)) {
-
-   		 water(col, row + 1, map, fullness/2);
-		 
-   		 return;
+		Water w;
+		if (fullness==0){
+			w = new Water(col, row, tileSize, tileset.getImage("Falling_water"), this, 0);
 		}
-		if(row+1<map.getTiles()[0].length && col+1< map.getTiles().length&& !map.getTiles()[col+1][row].isSolid() && map.getTiles()[col+1][row] instanceof Water == false){
-			if(col+1< map.getTiles().length && row-1>= map.getTiles().length&& map.getTiles()[col+1][row-1].isSolid() && map.getTiles()[col+1][row-1] instanceof Water == false){
-				water(col+1,row+1,map,fullness); 
-			}
+		else if (fullness==1){
+			w = new Water(col, row, tileSize, tileset.getImage("Quarter_water"), this, 1);
+		}
+		else if (fullness==2){
+			w = new Water(col, row, tileSize, tileset.getImage("Half_water"), this, 2);
+		}
+		else {
+			w = new Water(col, row, tileSize, tileset.getImage("Full_water"), this, 3);
+		}
+		map.addTile(col, row, w);
+
+        //this checks if the water can go down and if we can’t go down go left and right.
+		if (row+1 < map.getTiles()[col].length && !(map.getTiles()[col][row+1].isSolid())){
+			if (row+2< map.getTiles()[col].length  && map.getTiles()[col][row+2].isSolid())
+				water(col, row+1, map, 3);
 			else{
-				water(col+1,row ,map,fullness); 
+				water(col, row+1, map, 0);
 			}
 		}
-		if(col-1>=0&& !map.getTiles()[col-1][row].isSolid() && map.getTiles()[col-1][row] instanceof Water == false){
-			if(col-1 >=0 && row-1 >=0 && !map.getTiles()[col-1][row+1].isSolid() && map.getTiles()[col-1][row+1] instanceof Water == false){
-					water(col-1,row+1,map,fullness);
+		else if(row+1<map.getTiles()[row].length){
+			//right
+			if(col+1 < map.getTiles().length && !(map.getTiles()[col+1][row] instanceof Water) && !(map.getTiles()[col+1][row].isSolid())) {
+				if (fullness==1){
+					water(col+1, row, map, 1);
+				}
+				else if (fullness==2){
+					water(col+1, row, map, 1);
+				}
+				else if (fullness==0){
+					water(col+1, row, map, 3);
 				}
 				else{
-				water(col-1, row, map, fullness);
+					water(col+1, row, map, 2);
+				}	
+			}
+			//left
+			if(col-1>=0&&!(map.getTiles()[col-1][row] instanceof Water)&&!(map.getTiles()[col-1][row].isSolid())) {
+				if (fullness==1){
+					water(col-1, row, map, 1);
+				}
+				else if (fullness==2){
+					water(col-1, row, map, 1);
+				}
+				else if (fullness==0){
+					water(col-1, row, map, 3);
+				}
+				else{
+					water(col-1, row, map, 2);
+				}
 			}
 		}
-
 	}
 
 
@@ -287,7 +341,7 @@ public class Level {
 	   				 tile.draw(g);
 	   		 }
 	   	 }
-
+		
 
 	   	 // Draw the enemies
 	   	 for (int i = 0; i < enemies.length; i++) {
@@ -297,7 +351,11 @@ public class Level {
 
 	   	 // Draw the player
 	   	 player.draw(g);
-
+		
+		 g.setFont(new Font("Arial",Font.BOLD, 40));
+		 g.setColor(Color.RED);
+		 if(waterTimer != 0)
+		 g.drawString((System.currentTimeMillis()-waterTimer)/1000+"",(int)player.getX(), (int)player.getY()+10);
 
 
 
