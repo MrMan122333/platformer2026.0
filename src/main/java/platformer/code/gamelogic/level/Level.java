@@ -48,6 +48,7 @@ public class Level {
 	private int tileSize;
 	private Tileset tileset;
 	public static float GRAVITY = 70;
+	private float WATERGRAVITY = GRAVITY+GRAVITY/2;
 	private long waterTimer=0;
 	private long waterLimit = 5;
 
@@ -65,6 +66,7 @@ public class Level {
 	}
 
 	public void restartLevel() {
+		waters.clear();
 		int[][] values = mapdata.getValues();
 		Tile[][] tiles = new Tile[width][height];
 
@@ -182,18 +184,23 @@ public class Level {
 					i--;
 				}
 			}
+			boolean record = true;
 			for (int i=0; i<waters.size(); i++){
-				if (flowers.get(i).getHitbox().isIntersecting(player.getHitbox())) {
+				if (waters.get(i).getHitbox().isIntersecting(player.getHitbox())) {
+					record = false;
 					if(waterTimer==0){
 						waterTimer=System.currentTimeMillis();
 					}
 					else{
 						if((System.currentTimeMillis()-waterTimer)/1000>=waterLimit){
-
+							GRAVITY = WATERGRAVITY;
 						}
 					}
 				}
-				}
+			}
+			if(record){
+				GRAVITY=70;
+			}
 			// Update the enemies
 			for (int i1 = 0; i1 < enemies.length; i1++) {
 				enemies[i1].update(tslf);
@@ -257,6 +264,7 @@ public class Level {
 			w = new Water(col, row, tileSize, tileset.getImage("Full_water"), this, 3);
 		}
 		map.addTile(col, row, w);
+		waters.add(w);
 
         //this checks if the water can go down and if we can’t go down go left and right.
 		if (row+1 < map.getTiles()[col].length && !(map.getTiles()[col][row+1].isSolid())){
