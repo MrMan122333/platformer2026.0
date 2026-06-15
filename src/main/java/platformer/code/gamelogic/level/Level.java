@@ -38,6 +38,7 @@ public class Level {
 	private ArrayList<Enemy> enemiesList = new ArrayList<>();
 	private ArrayList<Flower> flowers = new ArrayList<>();
 	private ArrayList<Water> waters=new ArrayList<>();
+	private ArrayList<Gas> gases=new ArrayList<>();
 
 	private List<PlayerDieListener> dieListeners = new ArrayList<>();
 	private List<PlayerWinListener> winListeners = new ArrayList<>();
@@ -49,7 +50,10 @@ public class Level {
 	private Tileset tileset;
 	public static float GRAVITY = 70;
 	private float WATERGRAVITY = GRAVITY+GRAVITY/2;
+	private float GASGRAVITY = GRAVITY-GRAVITY/2;
+	private long gasTimer=0;
 	private long waterTimer=0;
+	private long gasLimit=5;
 	private long waterLimit = 5;
 
 	public Level(LevelData leveldata) {
@@ -67,6 +71,7 @@ public class Level {
 
 	public void restartLevel() {
 		waters.clear();
+		gases.clear();
 		int[][] values = mapdata.getValues();
 		Tile[][] tiles = new Tile[width][height];
 
@@ -184,6 +189,18 @@ public class Level {
 					i--;
 				}
 			}
+			boolean grecord=true;
+			for(int i= 0; i<gases.size();i++){
+				if (gases.get(i).getHitbox().isIntersecting(player.getHitbox())) {
+					grecord = false;
+					GRAVITY = GASGRAVITY;
+				}
+			}
+		}
+		if(grecord){
+				GRAVITY=70;
+			}
+
 			boolean record = true;
 			for (int i=0; i<waters.size(); i++){
 				if (waters.get(i).getHitbox().isIntersecting(player.getHitbox())) {
@@ -364,6 +381,11 @@ public class Level {
 		 g.setColor(Color.RED);
 		 if(waterTimer != 0)
 		 g.drawString((System.currentTimeMillis()-waterTimer)/1000+"",(int)player.getX(), (int)player.getY()+10);
+
+		g.setFont(new Font("Arial",Font.BOLD, 40));
+		 g.setColor(Color.RED);
+		 if(gasTimer != 0)
+		 g.drawString((System.currentTimeMillis()-gasTimer)/1000+"",(int)player.getX(), (int)player.getY()+10);
 
 
 
